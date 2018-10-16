@@ -71,7 +71,7 @@ final class PersistenceController: NSObject {
         self.initCallbackBlock = initCallbackBlock
     }
 
-    func save() {
+    func save(completion: (() -> ())? = nil) {
         guard let privateContext = privateContext else {
             return
         }
@@ -92,6 +92,8 @@ final class PersistenceController: NSObject {
             privateContext.perform {
                 do {
                     try privateContext.save()
+                    privateContext.processPendingChanges()
+                    completion?()
                 } catch {
                     fatalError("Error saving.")
                 }
@@ -106,7 +108,7 @@ final class PersistenceController: NSObject {
     @discardableResult
     func createAuthor(with name: String) -> Author? {
         guard let privateContext = privateContext else { return nil }
-        var createdAuthor: Author? // hacky
+        var createdAuthor: Author?
         privateContext.performAndWait { [weak self] in
             let author = Author(context: privateContext)
             author.name = name
@@ -122,7 +124,6 @@ final class PersistenceController: NSObject {
             let book = Book(context: privateContext)
             book.title = title
             book.author = author
-            book.authorId = author.id
             self?.save()
         }
     }
@@ -160,20 +161,17 @@ final class PersistenceController: NSObject {
         let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
         return objects(from: "Book", sortDescriptor: sortDescriptor, fetchLimit: limit)
     }
-    
+
     func books(by author: Author) -> [Book] {
-        guard
-            let id: UUID = author.id,
-            let privateContext = privateContext
-            else {
-                return []
+        guard let privateContext = privateContext else {
+            return []
         }
-        
+
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Book")
         fetchRequest.entity = Book.entity()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        fetchRequest.predicate = NSPredicate(format: "%K == %@", "authorId", id as CVarArg)
-        
+        fetchRequest.predicate = NSPredicate(format: "author == %@", author)
+
         do {
             guard let books = try privateContext.fetch(fetchRequest) as? [Book] else { return [] }
             return books
@@ -181,5 +179,10 @@ final class PersistenceController: NSObject {
             print("Error fetching")
             return []
         }
+    }
+
+    func delete<T: NSManagedObject>(_ obj: T, completion: (() -> ())? = nil) {
+        privateContext?.delete(obj)
+        save { completion?() }
     }
 }

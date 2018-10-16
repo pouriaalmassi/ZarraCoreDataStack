@@ -50,6 +50,13 @@ final class ViewController: UIViewController {
         print("========================================")
 
         // Mark: - Delete
+
+        print("Number of authors saved: \(persistenceController.authors().count)")
+        let anAuthor = persistenceController.authors().first!
+        persistenceController.delete(anAuthor) { [weak self] in
+            print("Number of authors saved after delete: \(String(describing: self?.persistenceController.authors().count))")
+            let allBooks = self?.persistenceController.books()
+            print("Number of books: \(String(describing: allBooks?.count))")
+        }
     }
 }
-

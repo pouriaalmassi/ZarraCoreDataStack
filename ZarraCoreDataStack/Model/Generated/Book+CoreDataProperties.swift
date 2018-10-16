@@ -19,7 +19,6 @@ extension Book {
 
     @NSManaged public var title: String?
     @NSManaged public var id: UUID?
-    @NSManaged public var authorId: UUID?
     @NSManaged public var author: Author?
 
 }
