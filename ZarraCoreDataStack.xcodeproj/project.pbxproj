@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0358A7A6217471F600182E41 /* Author+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0358A7A2217471F600182E41 /* Author+CoreDataClass.swift */; };
+		0358A7A8217471F600182E41 /* Book+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0358A7A4217471F600182E41 /* Book+CoreDataClass.swift */; };
+		0358A7B621747FC900182E41 /* Author+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0358A7B221747FC900182E41 /* Author+CoreDataProperties.swift */; };
+		0358A7BA2174833F00182E41 /* Book+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0358A7B82174833F00182E41 /* Book+CoreDataProperties.swift */; };
 		03D47CB6217427F900C84BFE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D47CB5217427F900C84BFE /* AppDelegate.swift */; };
 		03D47CB8217427F900C84BFE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D47CB7217427F900C84BFE /* ViewController.swift */; };
 		03D47CBD217427FB00C84BFE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 03D47CBC217427FB00C84BFE /* Assets.xcassets */; };
@@ -16,6 +20,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0358A7A2217471F600182E41 /* Author+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Author+CoreDataClass.swift"; sourceTree = "<group>"; };
+		0358A7A4217471F600182E41 /* Book+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Book+CoreDataClass.swift"; sourceTree = "<group>"; };
+		0358A7B221747FC900182E41 /* Author+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Author+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		0358A7B82174833F00182E41 /* Book+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Book+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		03D47CB2217427F900C84BFE /* ZarraCoreDataStack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZarraCoreDataStack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		03D47CB5217427F900C84BFE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		03D47CB7217427F900C84BFE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -37,6 +45,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0358A7AE21747FA900182E41 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				0358A7B221747FC900182E41 /* Author+CoreDataProperties.swift */,
+				0358A7B82174833F00182E41 /* Book+CoreDataProperties.swift */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
 		03D47CA9217427F900C84BFE = {
 			isa = PBXGroup;
 			children = (
@@ -56,6 +73,7 @@
 		03D47CB4217427F900C84BFE /* ZarraCoreDataStack */ = {
 			isa = PBXGroup;
 			children = (
+				03D47CCD217446AB00C84BFE /* Model */,
 				03D47CCC2174459D00C84BFE /* Persistence */,
 				03D47CB5217427F900C84BFE /* AppDelegate.swift */,
 				03D47CB7217427F900C84BFE /* ViewController.swift */,
@@ -73,6 +91,16 @@
 				03D47CC72174423E00C84BFE /* DataModel.xcdatamodeld */,
 			);
 			path = Persistence;
+			sourceTree = "<group>";
+		};
+		03D47CCD217446AB00C84BFE /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				0358A7AE21747FA900182E41 /* Generated */,
+				0358A7A2217471F600182E41 /* Author+CoreDataClass.swift */,
+				0358A7A4217471F600182E41 /* Book+CoreDataClass.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -147,7 +175,11 @@
 			files = (
 				03D47CC92174423E00C84BFE /* DataModel.xcdatamodeld in Sources */,
 				03D47CB8217427F900C84BFE /* ViewController.swift in Sources */,
+				0358A7BA2174833F00182E41 /* Book+CoreDataProperties.swift in Sources */,
+				0358A7A8217471F600182E41 /* Book+CoreDataClass.swift in Sources */,
+				0358A7A6217471F600182E41 /* Author+CoreDataClass.swift in Sources */,
 				03D47CB6217427F900C84BFE /* AppDelegate.swift in Sources */,
+				0358A7B621747FC900182E41 /* Author+CoreDataProperties.swift in Sources */,
 				03D47CCB2174459400C84BFE /* PersistenceController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

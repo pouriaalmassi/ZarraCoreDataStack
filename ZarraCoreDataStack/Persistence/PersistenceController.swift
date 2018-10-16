@@ -72,12 +72,15 @@ final class PersistenceController: NSObject {
     }
 
     func save() {
-        guard
-            let privateContext = privateContext,
-            let managedObjectContext = managedObjectContext,
-            privateContext.hasChanges == true,
-            managedObjectContext.hasChanges == true
-            else { return }
+        guard let privateContext = privateContext else {
+            return
+        }
+        guard let managedObjectContext = managedObjectContext else {
+            return
+        }
+        guard privateContext.hasChanges || managedObjectContext.hasChanges else {
+            return
+        }
 
         // Since we cannot guarantee that caller is the main thread, we
         // use --performBlockAndWait: against the main context to insure
@@ -93,6 +96,90 @@ final class PersistenceController: NSObject {
                     fatalError("Error saving.")
                 }
             }
+        }
+    }
+
+    // Domain specific functionality
+
+    // MARK: - Create
+
+    @discardableResult
+    func createAuthor(with name: String) -> Author? {
+        guard let privateContext = privateContext else { return nil }
+        var createdAuthor: Author? // hacky
+        privateContext.performAndWait { [weak self] in
+            let author = Author(context: privateContext)
+            author.name = name
+            createdAuthor = author
+            self?.save()
+        }
+        return createdAuthor
+    }
+
+    func createBook(with title: String, author: Author) {
+        guard let privateContext = privateContext else { return }
+        privateContext.performAndWait { [weak self] in
+            let book = Book(context: privateContext)
+            book.title = title
+            book.author = author
+            book.authorId = author.id
+            self?.save()
+        }
+    }
+
+    // MARK: - Read
+
+    private func objects<T>(from entity: String, sortDescriptor: NSSortDescriptor, fetchLimit: Int? = nil) -> [T] {
+        guard
+            let managedObjectContext = managedObjectContext,
+            let privateContext = privateContext
+            else { return [] }
+
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entity)
+        let entityDescription = NSEntityDescription.entity(forEntityName: entity, in: managedObjectContext)
+
+        fetchRequest.entity = entityDescription
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        if let fetchLimit = fetchLimit { fetchRequest.fetchLimit = fetchLimit }
+
+        do {
+            guard let objects = try privateContext.fetch(fetchRequest) as? [T] else { return [] }
+            return objects
+        } catch {
+            print("Error fetching")
+            return []
+        }
+    }
+
+    func authors(_ limit: Int? = nil) -> [Author] {
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
+        return objects(from: "Author", sortDescriptor: sortDescriptor, fetchLimit: limit)
+    }
+
+    func books(_ limit: Int? = nil) -> [Book] {
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        return objects(from: "Book", sortDescriptor: sortDescriptor, fetchLimit: limit)
+    }
+    
+    func books(by author: Author) -> [Book] {
+        guard
+            let id: UUID = author.id,
+            let privateContext = privateContext
+            else {
+                return []
+        }
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Book")
+        fetchRequest.entity = Book.entity()
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        fetchRequest.predicate = NSPredicate(format: "%K == %@", "authorId", id as CVarArg)
+        
+        do {
+            guard let books = try privateContext.fetch(fetchRequest) as? [Book] else { return [] }
+            return books
+        } catch {
+            print("Error fetching")
+            return []
         }
     }
 }
