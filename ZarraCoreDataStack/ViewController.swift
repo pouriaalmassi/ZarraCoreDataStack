@@ -20,8 +20,8 @@ final class ViewController: UIViewController {
 
         // Mark: - Create
 
-        let philipKDick = persistenceController.createAuthor(with: "Philip K. Dick")!
-        let bretEastonEllis = persistenceController.createAuthor(with: "Bret Easton Ellis")!
+        guard let philipKDick = persistenceController.createAuthor(with: "Philip K. Dick") else { return }
+        guard let bretEastonEllis = persistenceController.createAuthor(with: "Bret Easton Ellis") else { return }
         persistenceController.createBook(with: "Less Than Zero", author: bretEastonEllis)
         persistenceController.createBook(with: "American Psycho", author: bretEastonEllis)
         persistenceController.createBook(with: "Faith of Our Fathers", author: philipKDick)
@@ -46,17 +46,23 @@ final class ViewController: UIViewController {
 
         philipKDick.setValue("Philip Kindred Dick", forKey: "name")
         persistenceController.save()
-        print("updated name: \(philipKDick.name!)")
+        print("Updated name: \(philipKDick.name!)")
         print("========================================")
 
         // Mark: - Delete
 
-        print("Number of authors saved: \(persistenceController.authors().count)")
-        let anAuthor = persistenceController.authors().first!
+        print("Number of authors before delete: \(persistenceController.authors().count)")
+        let allBooks = persistenceController.books()
+        print("Number of books before delete: \(String(describing: allBooks.count))")
+
+        guard let anAuthor = persistenceController.authors().first else { return }
+        print("Delete author: \(anAuthor.name!)")
+
         persistenceController.delete(anAuthor) { [weak self] in
-            print("Number of authors saved after delete: \(String(describing: self?.persistenceController.authors().count))")
+            print("Number of authors after delete: \(String(describing: self?.persistenceController.authors().count))")
             let allBooks = self?.persistenceController.books()
-            print("Number of books: \(String(describing: allBooks?.count))")
+            print("Number of books after delete: \(String(describing: allBooks?.count))")
+            assert(allBooks!.count < 3, "Total number of books after delete should be less than total initially added.")
         }
     }
 }

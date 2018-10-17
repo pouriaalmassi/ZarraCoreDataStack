@@ -14,7 +14,18 @@ import CoreData
 final class PersistenceController: NSObject {
     typealias InitCallbackBlock = () -> ()
 
+    // **This is the application’s Single Source Of Truth.**
+    // This is the NSManagedObjectContext that the application will use for
+    // all user interaction. If we need to display something to the user,
+    // we use this context. If the user is going to edit something, we use
+    // this context. No exceptions.
     internal var managedObjectContext: NSManagedObjectContext?
+
+    // Private Queue Context. The private queue context has one job in life.
+    // It writes to disk. Such a simple and yet vital job in the application.
+    // We build this as a private queue because we specifically want it to be
+    // asynchronous from the UI. We want to avoid locking the UI as much as
+    // possible because of the persistence layer.
     private var privateContext: NSManagedObjectContext?
     private var initCallbackBlock: (InitCallbackBlock)?
 
@@ -71,6 +82,8 @@ final class PersistenceController: NSObject {
         self.initCallbackBlock = initCallbackBlock
     }
 
+    // MARK: - Save
+
     func save(completion: (() -> ())? = nil) {
         guard let privateContext = privateContext else {
             return
@@ -89,10 +102,12 @@ final class PersistenceController: NSObject {
             // Once the main context has saved then we move on to the private queue.
             // This queue can be asynchronous without any issues so we call --performBlock:
             // on it and then call save.
+            managedObjectContext.processPendingChanges()
             privateContext.perform {
                 do {
                     try privateContext.save()
                     privateContext.processPendingChanges()
+                    print("Write finished")
                     completion?()
                 } catch {
                     fatalError("Error saving.")
@@ -107,10 +122,10 @@ final class PersistenceController: NSObject {
 
     @discardableResult
     func createAuthor(with name: String) -> Author? {
-        guard let privateContext = privateContext else { return nil }
+        guard let managedObjectContext = managedObjectContext else { return nil }
         var createdAuthor: Author?
-        privateContext.performAndWait { [weak self] in
-            let author = Author(context: privateContext)
+        managedObjectContext.performAndWait { [weak self] in
+            let author = Author(context: managedObjectContext)
             author.name = name
             createdAuthor = author
             self?.save()
@@ -119,9 +134,9 @@ final class PersistenceController: NSObject {
     }
 
     func createBook(with title: String, author: Author) {
-        guard let privateContext = privateContext else { return }
-        privateContext.performAndWait { [weak self] in
-            let book = Book(context: privateContext)
+        guard let managedObjectContext = managedObjectContext else { return }
+        managedObjectContext.performAndWait { [weak self] in
+            let book = Book(context: managedObjectContext)
             book.title = title
             book.author = author
             self?.save()
@@ -130,11 +145,8 @@ final class PersistenceController: NSObject {
 
     // MARK: - Read
 
-    private func objects<T>(from entity: String, sortDescriptor: NSSortDescriptor, fetchLimit: Int? = nil) -> [T] {
-        guard
-            let managedObjectContext = managedObjectContext,
-            let privateContext = privateContext
-            else { return [] }
+    func objects<T>(from entity: String, sortDescriptor: NSSortDescriptor, fetchLimit: Int? = nil) -> [T] {
+        guard let managedObjectContext = managedObjectContext else { return [] }
 
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entity)
         let entityDescription = NSEntityDescription.entity(forEntityName: entity, in: managedObjectContext)
@@ -144,7 +156,7 @@ final class PersistenceController: NSObject {
         if let fetchLimit = fetchLimit { fetchRequest.fetchLimit = fetchLimit }
 
         do {
-            guard let objects = try privateContext.fetch(fetchRequest) as? [T] else { return [] }
+            guard let objects = try managedObjectContext.fetch(fetchRequest) as? [T] else { return [] }
             return objects
         } catch {
             print("Error fetching")
@@ -163,9 +175,7 @@ final class PersistenceController: NSObject {
     }
 
     func books(by author: Author) -> [Book] {
-        guard let privateContext = privateContext else {
-            return []
-        }
+        guard let managedObjectContext = managedObjectContext else { return [] }
 
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Book")
         fetchRequest.entity = Book.entity()
@@ -173,7 +183,7 @@ final class PersistenceController: NSObject {
         fetchRequest.predicate = NSPredicate(format: "author == %@", author)
 
         do {
-            guard let books = try privateContext.fetch(fetchRequest) as? [Book] else { return [] }
+            guard let books = try managedObjectContext.fetch(fetchRequest) as? [Book] else { return [] }
             return books
         } catch {
             print("Error fetching")
@@ -181,8 +191,13 @@ final class PersistenceController: NSObject {
         }
     }
 
+    // MARK: - Delete
+
     func delete<T: NSManagedObject>(_ obj: T, completion: (() -> ())? = nil) {
-        privateContext?.delete(obj)
-        save { completion?() }
+        guard let managedObjectContext = managedObjectContext else { return }
+        managedObjectContext.delete(obj)
+        save {
+            completion?()
+        }
     }
 }
