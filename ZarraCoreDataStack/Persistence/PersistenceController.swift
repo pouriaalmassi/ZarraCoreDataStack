@@ -103,14 +103,21 @@ final class PersistenceController: NSObject {
             // This queue can be asynchronous without any issues so we call --performBlock:
             // on it and then call save.
             managedObjectContext.processPendingChanges()
+            do {
+                try managedObjectContext.save()
+                print("Write finished (main moc)")
+            } catch {
+                fatalError("Error saving (main moc).")
+            }
+
             privateContext.perform {
                 do {
                     try privateContext.save()
                     privateContext.processPendingChanges()
-                    print("Write finished")
+                    print("Write finished (private moc)")
                     completion?()
                 } catch {
-                    fatalError("Error saving.")
+                    fatalError("Error saving (private moc).")
                 }
             }
         }
